@@ -1,11 +1,11 @@
 -- Grenade Helper by ShadyRetard, updated to v5 by TitanumIchigo
-local THROW_RADIUS = 20;
+
 local WALK_SPEED = 100;
 local DRAW_MARKER_DISTANCE = 100;
 local GH_ACTION_COOLDOWN = 30;
 local GAME_COMMAND_COOLDOWN = 40;
 local GRENADE_SAVE_FILE_NAME = "grenade_helper_data.dat";
-local GH_VISUALS_DISTANCE_SL = 3000;
+
 local ButtonPosition = gui.Reference("VISUALS", "Other", "Extra");
 
 local MULTIBOX = gui.Groupbox(ButtonPosition, "Grenade Helper", 0, 125, 265, 400);
@@ -17,6 +17,8 @@ local GH_CHECKBOX_HELPERLINE = gui.Checkbox( MULTIBOX, "gh_ch_throwline", "GH Th
 local GH_CHECKBOX_BOXSTAND = gui.Checkbox( MULTIBOX, "gh_ch_standbox", "GH Stand Box", 1 );
 local GH_CHECKBOX_OOD = gui.Checkbox( MULTIBOX, "gh_ch_standbox_ood", "GH Stand Box Out of Distance", 1 );
 local GH_CHECKBOX_TEXT = gui.Checkbox( MULTIBOX, "gh_ch_text", "GH Text", 1 );
+local GH_VISUALS_DISTANCE_SL = gui.Slider(MULTIBOX, "gh_max_distance", "GH Max Distance", 3000, 0, 5000);
+local THROW_RADIUS = gui.Slider(MULTIBOX, "gh_box_radius", "GH Box Size", 20, 0, 50);
 
 local GH_CHECKBOX_KEYBINDS = gui.Checkbox( MULTIBOX, "gh_ch_keybinds", "Enable Keybinds", 0 );
 local GH_ADD = gui.Keybox(MULTIBOX, "gh_kb_add", "Add Throw", 0);
@@ -197,11 +199,13 @@ function doDel(throw)
 end
 
 function moveEventHandler(cmd)
+
 	if (GH_ENABLED:GetValue() == false) then
 		return
 	end
 
 	local me = entities.GetLocalPlayer();
+	
 
     if (current_map_name == nil or maps == nil or maps[current_map_name] == nil or me == nil or not me:IsAlive()) then
         throw_to_add = nil;
@@ -231,7 +235,7 @@ function moveEventHandler(cmd)
     end
 
     local closest_throw, distance = getClosestThrow(maps[current_map_name], me, cmd);
-    if (closest_throw == nil or distance > THROW_RADIUS) then
+    if (closest_throw == nil or distance > THROW_RADIUS:GetValue()) then
         return;
     end
 
@@ -299,11 +303,11 @@ end
 
 function showNadeThrows()
     local me = entities:GetLocalPlayer();
-   if (me == nil) then
+	if (me == nil) then
         return;
     end
 
-
+	local myPos = me:GetAbsOrigin();
     local weapon_name = getWeaponName(me);
 
     if (weapon_name ~= nil and weapon_name ~= "smokegrenade" and weapon_name ~= "flashbang" and weapon_name ~= "molotovgrenade" and weapon_name ~= "hegrenade" and weapon_name ~= "decoy") then
@@ -315,6 +319,7 @@ function showNadeThrows()
 	
     for i=1, #throws_to_show do
         local throw = throws_to_show[i];
+				
 		local throwVector = Vector3(throw.pos.x, throw.pos.y, throw.pos.z);
         local cx, cy = client.WorldToScreen(throwVector);
 
@@ -352,56 +357,59 @@ function showNadeThrows()
             end
         end
 		
-    	local ulVector = Vector3(throw.pos.x - THROW_RADIUS / 2, throw.pos.y - THROW_RADIUS / 2, throw.pos.z);
+    	local ulVector = Vector3(throw.pos.x - THROW_RADIUS:GetValue() / 2, throw.pos.y - THROW_RADIUS:GetValue() / 2, throw.pos.z);
         local ulx, uly = client.WorldToScreen(ulVector);
-		local blVector = Vector3(throw.pos.x - THROW_RADIUS / 2, throw.pos.y + THROW_RADIUS / 2, throw.pos.z);
+		local blVector = Vector3(throw.pos.x - THROW_RADIUS:GetValue() / 2, throw.pos.y + THROW_RADIUS:GetValue() / 2, throw.pos.z);
         local blx, bly = client.WorldToScreen(blVector);
-		local urVector = Vector3(throw.pos.x + THROW_RADIUS / 2, throw.pos.y - THROW_RADIUS / 2, throw.pos.z);
+		local urVector = Vector3(throw.pos.x + THROW_RADIUS:GetValue() / 2, throw.pos.y - THROW_RADIUS:GetValue() / 2, throw.pos.z);
         local urx, ury = client.WorldToScreen(urVector);
-		local brVector = Vector3(throw.pos.x + THROW_RADIUS / 2, throw.pos.y + THROW_RADIUS / 2, throw.pos.z);
+		local brVector = Vector3(throw.pos.x + THROW_RADIUS:GetValue() / 2, throw.pos.y + THROW_RADIUS:GetValue() / 2, throw.pos.z);
         local brx, bry = client.WorldToScreen(brVector);
 	
 
 		if (cx ~= nil and cy ~= nil and ulx ~= nil and uly ~= nil and blx ~= nil and bly ~= nil and urx ~= nil and ury ~= nil and brx ~= nil and bry ~= nil) then
-			
-         
-			-- Draw name
-            if (throw.name ~= nil) then
-				if GH_CHECKBOX_TEXT:GetValue() then
-					local text_size_w, text_size_h = draw.GetTextSize(throw.name);
-					draw.Color(CLR_TEXT:GetValue());
-					draw.Text(cx - text_size_w / 2, cy - 20 - text_size_h / 2, throw.name);
-				end
-            end
 
-            -- Show radius as green when in distance, blue otherwise
-            if (within_distance) then
-				if GH_CHECKBOX_BOXSTAND:GetValue() then
-					draw.Color(CLR_STAND_BOX:GetValue());
+			if(throw.distance < GH_VISUALS_DISTANCE_SL:GetValue()) then
+
+
+				-- Draw name
+				if (throw.name ~= nil) then
+					if GH_CHECKBOX_TEXT:GetValue() then
+						local text_size_w, text_size_h = draw.GetTextSize(throw.name);
+						draw.Color(CLR_TEXT:GetValue());
+						draw.Text(cx - text_size_w / 2, cy - 20 - text_size_h / 2, throw.name);
+					end
+				end
+
+				-- Show radius as green when in distance, blue otherwise
+				if (within_distance) then
+					if GH_CHECKBOX_BOXSTAND:GetValue() then
+						draw.Color(CLR_STAND_BOX:GetValue());
+					else
+						draw.Color(255, 255, 255, 0);
+					end
 				else
-					draw.Color(255, 255, 255, 0);
+					if GH_CHECKBOX_OOD:GetValue() then
+						draw.Color(CLR_STAND_BOX_OOD:GetValue());
+					end
 				end
-            else
-				if GH_CHECKBOX_OOD:GetValue() then
-					draw.Color(CLR_STAND_BOX_OOD:GetValue());
-				end
-            end
-			
-			
- 	
-            -- Top left to rest
-            draw.Line(ulx, uly, blx, bly);
-	
-            draw.Line(ulx, uly, urx, ury);
-            draw.Line(ulx, uly, brx, bry);
+				
+				
+		
+				-- Top left to rest
+				draw.Line(ulx, uly, blx, bly);
+		
+				draw.Line(ulx, uly, urx, ury);
+				draw.Line(ulx, uly, brx, bry);
 
-            -- Bottom right to rest
-            draw.Line(brx, bry, blx, bly);
-            draw.Line(brx, bry, urx, ury);
+				-- Bottom right to rest
+				draw.Line(brx, bry, blx, bly);
+				draw.Line(brx, bry, urx, ury);
 
-            -- Diagonal
-            draw.Line(blx, bly, urx, ury);
-        end
+				-- Diagonal
+				draw.Line(blx, bly, urx, ury);
+			end
+		end
     end
 end
 
@@ -435,7 +443,7 @@ function getDistanceToTarget(my_x, my_y, my_z, t_x, t_y, t_z)
     local dx = my_x - t_x;
     local dy = my_y - t_y;
     local dz = my_z - t_z;
-    return math.sqrt(dx^2 + dy^2 + dz^2);
+    return math.sqrt(dx*dx + dy*dy + dz*dz);
 end
 
 function dump(o)
@@ -461,9 +469,11 @@ function getActiveThrows(map, me, nade_name)
 		
         if (throw ~= nil and throw.nade == nade_name) then
             local myPos = me:GetAbsOrigin();
+
             local distance = getDistanceToTarget(myPos.x, myPos.y, throw.pos.z, throw.pos.x, throw.pos.y, throw.pos.z);
             throw.distance = distance;
-            if (distance < THROW_RADIUS) then
+	
+            if (distance < THROW_RADIUS:GetValue()) then
                 table.insert(throws_in_distance, throw);
             else
                 table.insert(throws, throw);
@@ -502,7 +512,7 @@ function getClosestThrow(map, me, cmd)
         if (
         closest_distance == nil
                 or (
-        distance <= THROW_RADIUS
+        distance <= THROW_RADIUS:GetValue()
                 and (
         closest_distance_from_center == nil
                 or (closest_distance_from_center ~= nil and distance_from_center ~= nil and distance_from_center < closest_distance_from_center)
