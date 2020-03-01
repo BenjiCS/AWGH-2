@@ -67,7 +67,7 @@ local throw_type_mapping = {
 
 local chat_add_messages = {
     "[GH] Welcome to GH Setup. Type 'cancel' at any time to cancel. Please enter the name of the throw (e.g. CT to B site):",
-    "[GH] Please enter the throw type (stand / jump / run / crouch / right):"
+    "[GH] Please enter the throw type (stand / jump / run / crouch / right / leftright / jumpcrouch / runjump):"
 }
 
 -- Just open up the file in append mode, should create the file if it doesn't exist and won't override anything if it does
