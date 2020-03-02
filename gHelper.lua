@@ -18,7 +18,10 @@ local GH_CHECKBOX_BOXSTAND = gui.Checkbox( MULTIBOX, "gh_ch_standbox", "GH Stand
 local GH_CHECKBOX_OOD = gui.Checkbox( MULTIBOX, "gh_ch_standbox_ood", "GH Stand Box Out of Distance", 1 );
 local GH_CHECKBOX_TEXT = gui.Checkbox( MULTIBOX, "gh_ch_text", "GH Text", 1 );
 local GH_VISUALS_DISTANCE_SL = gui.Slider(MULTIBOX, "gh_max_distance", "GH Max Distance", 3000, 0, 5000);
+local GH_CHECKBOX_FIXSTRAFE = gui.Checkbox(MULTIBOX, "gh_fix_strafe", "GH Disable Autostrafe", 1);
+local GH_CHECKBOX_FIXSTRAFEAIR = gui.Checkbox(MULTIBOX, "gh_fix_airstrafe", "GH Disable Airstrafe", 1);
 local THROW_RADIUS = gui.Slider(MULTIBOX, "gh_box_radius", "GH Box Size", 20, 0, 50);
+
 
 local GH_CHECKBOX_KEYBINDS = gui.Checkbox( MULTIBOX, "gh_ch_keybinds", "Enable Keybinds", 0 );
 local GH_ADD = gui.Keybox(MULTIBOX, "gh_kb_add", "Add Throw", 0);
@@ -29,6 +32,8 @@ local CLR_HELPER_LINE = gui.ColorPicker(GH_CHECKBOX_HELPERLINE, "gh_clr_helper",
 local CLR_STAND_BOX = gui.ColorPicker(GH_CHECKBOX_BOXSTAND, "gh_clr_standbox", "Grenade Helper Location", 0, 230, 64, 255);
 local CLR_STAND_BOX_OOD = gui.ColorPicker(GH_CHECKBOX_OOD, "gh_clr_standbox_oop", "Grenade Helper Location (Out)", 22, 160, 133, 255);
 local CLR_TEXT = gui.ColorPicker(GH_CHECKBOX_TEXT, "gh_clr_text", "Grenade Helper Text Color", 255, 255, 255, 255);
+
+
 
 local maps = {}
 
@@ -62,12 +67,14 @@ local throw_type_mapping = {
     "right",
 	"leftright",
 	"jumpcrouch",
+	"jumpleftright",
+	"jumpright",
 	"runjump";
 }
 
 local chat_add_messages = {
     "[GH] Welcome to GH Setup. Type 'cancel' at any time to cancel. Please enter the name of the throw (e.g. CT to B site):",
-    "[GH] Please enter the throw type (stand / jump / run / crouch / right / leftright / jumpcrouch / runjump):"
+    "[GH] Please enter the throw type (stand / jump / run / crouch / right / leftright / jumpcrouch / runjump / jumpleftright / jumpright):"
 }
 
 -- Just open up the file in append mode, should create the file if it doesn't exist and won't override anything if it does
@@ -311,11 +318,24 @@ function showNadeThrows()
     local weapon_name = getWeaponName(me);
 
     if (weapon_name ~= nil and weapon_name ~= "smokegrenade" and weapon_name ~= "flashbang" and weapon_name ~= "molotovgrenade" and weapon_name ~= "hegrenade" and weapon_name ~= "decoy") then
+		if GH_CHECKBOX_FIXSTRAFE:GetValue() then
+			gui.SetValue("misc.strafe.enable", 1);
+		end
+		if GH_CHECKBOX_FIXSTRAFEAIR:GetValue() then
+			gui.SetValue("misc.strafe.air", 1);
+		end
         return;
     end
 
 
     local throws_to_show, within_distance = getActiveThrows(maps[current_map_name], me, weapon_name);
+
+	if GH_CHECKBOX_FIXSTRAFE:GetValue() then
+		gui.SetValue("misc.strafe.enable", 1);
+	end
+	if GH_CHECKBOX_FIXSTRAFEAIR:GetValue() then
+		gui.SetValue("misc.strafe.air", 1);
+	end
 	
     for i=1, #throws_to_show do
         local throw = throws_to_show[i];
@@ -324,6 +344,12 @@ function showNadeThrows()
         local cx, cy = client.WorldToScreen(throwVector);
 
         if (within_distance) then
+			if GH_CHECKBOX_FIXSTRAFE:GetValue() then
+				gui.SetValue("misc.strafe.enable", 0);
+			end
+			if GH_CHECKBOX_FIXSTRAFEAIR:GetValue() then
+				gui.SetValue("misc.strafe.air", 0);
+			end
             local z_offset = 64;
             if (throw.type == "crouch") then
                 z_offset = 46;
@@ -372,6 +398,7 @@ function showNadeThrows()
 			if(throw.distance < GH_VISUALS_DISTANCE_SL:GetValue()) then
 
 
+
 				-- Draw name
 				if (throw.name ~= nil) then
 					if GH_CHECKBOX_TEXT:GetValue() then
@@ -383,12 +410,13 @@ function showNadeThrows()
 
 				-- Show radius as green when in distance, blue otherwise
 				if (within_distance) then
+					
 					if GH_CHECKBOX_BOXSTAND:GetValue() then
 						draw.Color(CLR_STAND_BOX:GetValue());
 					else
 						draw.Color(255, 255, 255, 0);
 					end
-				else
+				else		
 					if GH_CHECKBOX_OOD:GetValue() then
 						draw.Color(CLR_STAND_BOX_OOD:GetValue());
 					end
