@@ -6,9 +6,9 @@ local GH_ACTION_COOLDOWN = 30;
 local GAME_COMMAND_COOLDOWN = 40;
 local GRENADE_SAVE_FILE_NAME = "grenade_helper_data.dat";
 
-local ButtonPosition = gui.Reference("VISUALS", "Other", "Extra");
+local ButtonPosition = gui.Reference("VISUALS", "Other");
 
-local MULTIBOX = gui.Groupbox(ButtonPosition, "Grenade Helper", 0, 125, 265, 400);
+local MULTIBOX = gui.Groupbox(ButtonPosition, "Grenade Helper", 330, 375, 295, 400);
 
 local GH_ENABLED = gui.Checkbox( MULTIBOX, "gh_enabled", "Grenade Helper Enabled", 1 );
 local RECT_SIZE = gui.Slider(MULTIBOX, "gh_rect_size", "GH Throw Rect Size", 10, 0, 25);
