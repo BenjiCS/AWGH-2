@@ -449,24 +449,28 @@ function getThrowPosition(pos_x, pos_y, pos_z, ax, ay, z_offset)
 end
 
 function getWeaponName(me)
-    local my_weapon = me:GetPropEntity("m_hActiveWeapon");
-    if (my_weapon == nil) then
-        return nil;
-    end
+	if me ~= nil then
+		local my_weapon = me:GetPropEntity("m_hActiveWeapon");
+		if (my_weapon == nil) then
+			return nil;
+		end
 
-    local weapon_name = my_weapon:GetClass();
-    weapon_name = weapon_name:gsub("CWeapon", "");
-    weapon_name = weapon_name:lower();
+		local weapon_name = my_weapon:GetClass();
+		if weapon_name ~= nil then
+			weapon_name = weapon_name:gsub("CWeapon", "");
+			weapon_name = weapon_name:lower();
 
-    if (weapon_name:sub(1, 1) == "c") then
-        weapon_name = weapon_name:sub(2)
-    end
+			if (weapon_name:sub(1, 1) == "c") then
+				weapon_name = weapon_name:sub(2)
+			end
 
-    if (weapon_name == "incendiarygrenade") then
-        weapon_name = "molotovgrenade";
-    end
-
-    return weapon_name;
+			if (weapon_name == "incendiarygrenade") then
+				weapon_name = "molotovgrenade";
+			end
+		end
+		return weapon_name;
+	end
+	return nil;
 end
 
 function getDistanceToTarget(my_x, my_y, my_z, t_x, t_y, t_z)
